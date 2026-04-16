@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.datastore.DatastoreIO;
+import org.apache.beam.sdk.io.gcp.datastore.DatastoreV1;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -77,6 +78,13 @@ public class DatastoreCopy {
     @Default.String("")
     String getTargetNamespace();
     void setTargetNamespace(String value);
+
+    @Description("Datastore emulator host, e.g. \"localhost:8089\". If set, reads and writes go to "
+        + "the emulator instead of Cloud Datastore. Primarily a test seam; DatastoreIO does not "
+        + "read DATASTORE_EMULATOR_HOST itself.")
+    @Default.String("")
+    String getLocalhost();
+    void setLocalhost(String value);
   }
 
   /** Rewrites an entity's key to use the target project and namespace. */
@@ -119,23 +127,32 @@ public class DatastoreCopy {
 
     List<String> kinds = Arrays.asList(options.getKinds().split(","));
 
+    String localhost = options.getLocalhost();
+
     List<PCollection<Entity>> reads = new ArrayList<>();
     for (String kind : kinds) {
       String query = buildQuery(kind.trim(), options.getWhere());
-      reads.add(p.apply("Read-" + kind,
-          DatastoreIO.v1().read()
-              .withProjectId(options.getSourceProject())
-              .withLiteralGqlQuery(query)
-              .withNamespace(options.getSourceNamespace())));
+      DatastoreV1.Read read = DatastoreIO.v1().read()
+          .withProjectId(options.getSourceProject())
+          .withLiteralGqlQuery(query)
+          .withNamespace(options.getSourceNamespace());
+      if (!localhost.isEmpty()) {
+        read = read.withLocalhost(localhost);
+      }
+      reads.add(p.apply("Read-" + kind, read));
+    }
+
+    DatastoreV1.Write write = DatastoreIO.v1().write()
+        .withProjectId(options.getTargetProject());
+    if (!localhost.isEmpty()) {
+      write = write.withLocalhost(localhost);
     }
 
     PCollectionList.of(reads)
         .apply("FlattenKinds", Flatten.pCollections())
         .apply("RekeyEntities",
             MapElements.via(new RekeyEntity(options.getTargetProject(), targetNamespace)))
-        .apply("WriteToDatastore",
-            DatastoreIO.v1().write()
-                .withProjectId(options.getTargetProject()));
+        .apply("WriteToDatastore", write);
   }
 
   public static void main(String[] args) {
