@@ -64,15 +64,25 @@ public class DatastoreCopy {
     String getWhere();
     void setWhere(String value);
 
+    @Description("Source database ID (empty string for the default database)")
+    @Default.String("")
+    String getSourceDatabaseId();
+    void setSourceDatabaseId(String value);
+
     @Description("Source namespace (empty string for default namespace)")
     @Default.String("")
     String getSourceNamespace();
     void setSourceNamespace(String value);
 
-    @Description("Target Firestore in Datastore mode project ID")
-    @Required
+    @Description("Target Firestore in Datastore mode project ID (defaults to source project)")
+    @Default.String("")
     String getTargetProject();
     void setTargetProject(String value);
+
+    @Description("Target database ID (empty string for the default database; defaults to source database ID)")
+    @Default.String("")
+    String getTargetDatabaseId();
+    void setTargetDatabaseId(String value);
 
     @Description("Target namespace (empty string for default namespace; defaults to source namespace)")
     @Default.String("")
@@ -121,6 +131,12 @@ public class DatastoreCopy {
   }
 
   static void buildPipeline(Pipeline p, Options options) {
+    String targetProject = options.getTargetProject().isEmpty()
+        ? options.getSourceProject()
+        : options.getTargetProject();
+    String targetDatabaseId = options.getTargetDatabaseId().isEmpty()
+        ? options.getSourceDatabaseId()
+        : options.getTargetDatabaseId();
     String targetNamespace = options.getTargetNamespace().isEmpty()
         ? options.getSourceNamespace()
         : options.getTargetNamespace();
@@ -134,6 +150,7 @@ public class DatastoreCopy {
       String query = buildQuery(kind.trim(), options.getWhere());
       DatastoreV1.Read read = DatastoreIO.v1().read()
           .withProjectId(options.getSourceProject())
+          .withDatabaseId(options.getSourceDatabaseId())
           .withLiteralGqlQuery(query)
           .withNamespace(options.getSourceNamespace());
       if (!localhost.isEmpty()) {
@@ -143,7 +160,8 @@ public class DatastoreCopy {
     }
 
     DatastoreV1.Write write = DatastoreIO.v1().write()
-        .withProjectId(options.getTargetProject());
+        .withProjectId(targetProject)
+        .withDatabaseId(targetDatabaseId);
     if (!localhost.isEmpty()) {
       write = write.withLocalhost(localhost);
     }
@@ -151,7 +169,7 @@ public class DatastoreCopy {
     PCollectionList.of(reads)
         .apply("FlattenKinds", Flatten.pCollections())
         .apply("RekeyEntities",
-            MapElements.via(new RekeyEntity(options.getTargetProject(), targetNamespace)))
+            MapElements.via(new RekeyEntity(targetProject, targetNamespace)))
         .apply("WriteToDatastore", write);
   }
 

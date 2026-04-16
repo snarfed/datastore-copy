@@ -22,8 +22,10 @@ For general Beam SDK usage on Dataflow, see [Use Apache Beam with Dataflow](http
 | `--sourceProject` | yes | Source Firestore in Datastore mode project ID |
 | `--kinds` | yes | Comma-separated list of Datastore kinds to copy, e.g. `Kind1,Kind2,Kind3` |
 | `--where` | no | GQL WHERE clause applied to all kinds, e.g. `status = 'active'`. Do not include the `WHERE` keyword. |
+| `--sourceDatabaseId` | no | Source database ID (default: empty string, i.e. the default database) |
 | `--sourceNamespace` | no | Source namespace (default: empty string, i.e. the default namespace) |
-| `--targetProject` | yes | Target Firestore in Datastore mode project ID |
+| `--targetProject` | no | Target Firestore in Datastore mode project ID (default: same as source project) |
+| `--targetDatabaseId` | no | Target database ID (default: same as source database ID) |
 | `--targetNamespace` | no | Target namespace (default: same as source namespace) |
 
 When running on Dataflow, also pass the standard runner flags: `--runner`, `--project`, `--region`, `--tempLocation`.
