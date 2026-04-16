@@ -2,6 +2,8 @@
 
 An [Apache Beam](https://beam.apache.org/) pipeline that copies [Firestore in Datastore mode](https://cloud.google.com/datastore/docs) entities of one or more kinds from one Google Cloud project to another, with an optional filter. Runs locally via the DirectRunner or on [Google Cloud Dataflow](https://cloud.google.com/dataflow).
 
+This project is placed in the public domain. You may also use it under the [CC0 License](https://creativecommons.org/publicdomain/zero/1.0/).
+
 ## Background
 
 Google Cloud provides a set of [provided Dataflow templates](https://cloud.google.com/dataflow/docs/guides/templates/provided-templates) for common data movement tasks, including:
