@@ -42,12 +42,20 @@ mvn package
 
 This produces a fat jar at `target/datastore-copy-1.0-SNAPSHOT.jar` containing all dependencies.
 
+## Running tests
+
+```sh
+JAVA_HOME=... DATASTORE_EMULATOR_HOST=localhost:8089 mvn test
+```
+
+Unit tests cover `buildQuery` and `RekeyEntity` with no external dependencies. Integration tests run the full pipeline against the Datastore emulator and require `DATASTORE_EMULATOR_HOST` to be set; they are skipped automatically if it is not.
+
 ## Running locally (DirectRunner)
 
 Uses application default credentials. Run `gcloud auth application-default login` first if needed.
 
 ```sh
-mvn compile exec:java \
+JAVA_HOME=... mvn compile exec:java \
   -Dexec.mainClass=org.snarfed.datastorecopy.DatastoreCopy \
   -Dexec.args="--sourceProject=my-src-project \
                --kinds=Kind1,Kind2,Kind3 \
@@ -57,7 +65,7 @@ mvn compile exec:java \
 With an optional filter and namespace:
 
 ```sh
-mvn compile exec:java \
+JAVA_HOME=... mvn compile exec:java \
   -Dexec.mainClass=org.snarfed.datastorecopy.DatastoreCopy \
   -Dexec.args="--sourceProject=my-src-project \
                --kinds=Kind1,Kind2,Kind3 \
@@ -66,14 +74,6 @@ mvn compile exec:java \
                --targetProject=my-dst-project \
                --targetNamespace=other-namespace"
 ```
-
-## Running tests
-
-```sh
-mvn test
-```
-
-The tests cover `buildQuery` and `RekeyEntity` — all custom logic — using pure in-memory data with no external dependencies.
 
 ## Running on Dataflow
 
