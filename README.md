@@ -27,6 +27,7 @@ For general Beam SDK usage on Dataflow, see [Use Apache Beam with Dataflow](http
 | `--targetProject` | no | Target Firestore in Datastore mode project ID (default: same as source project) |
 | `--targetDatabaseId` | no | Target database ID (default: same as source database ID) |
 | `--targetNamespace` | no | Target namespace (default: same as source namespace) |
+| `--numQuerySplits` | no | Number of query splits per kind for parallel reads (default: 0, Beam chooses). Set to `1` if `--where` uses an inequality filter (`>`, `<`, `>=`, `<=`), which the query splitter does not support. |
 
 When running on Dataflow, also pass the standard runner flags: `--runner`, `--project`, `--region`, `--tempLocation`.
 

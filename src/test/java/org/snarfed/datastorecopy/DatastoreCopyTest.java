@@ -69,12 +69,13 @@ public class DatastoreCopyTest {
         .build();
 
     com.google.datastore.v1.Entity rekeyed =
-        new DatastoreCopy.RekeyEntity("target-project", "target-ns").apply(entity);
+        new DatastoreCopy.RekeyEntity("target-project", "target-db", "target-ns").apply(entity);
 
     assertEquals(
         com.google.datastore.v1.Key.newBuilder()
             .setPartitionId(PartitionId.newBuilder()
                 .setProjectId("target-project")
+                .setDatabaseId("target-db")
                 .setNamespaceId("target-ns"))
             .addPath(com.google.datastore.v1.Key.PathElement.newBuilder()
                 .setKind("MyKind").setName("my-entity"))
@@ -93,7 +94,7 @@ public class DatastoreCopyTest {
         .build();
 
     com.google.datastore.v1.Entity rekeyed =
-        new DatastoreCopy.RekeyEntity("target-project", "").apply(entity);
+        new DatastoreCopy.RekeyEntity("target-project", "", "").apply(entity);
 
     assertEquals("Alice", rekeyed.getPropertiesOrThrow("name").getStringValue());
     assertEquals("target-project", rekeyed.getKey().getPartitionId().getProjectId());
