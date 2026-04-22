@@ -2,8 +2,8 @@ package org.snarfed.datastorecopy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeNotNull;
 
+import com.google.cloud.NoCredentials;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
@@ -24,10 +24,10 @@ import org.junit.Test;
 /**
  * Tests for DatastoreCopy.
  *
- * <p>Unit tests run with no external dependencies. Integration tests require the Datastore
- * emulator; set DATASTORE_EMULATOR_HOST and run:
+ * <p>Integration tests require the Datastore emulator running on localhost:8089 (or
+ * DATASTORE_EMULATOR_HOST if set). Start it with:
  * <pre>
- *   DATASTORE_EMULATOR_HOST=localhost:8089 mvn test
+ *   gcloud beta emulators datastore start --host-port=localhost:8089
  * </pre>
  */
 public class DatastoreCopyTest {
@@ -48,12 +48,12 @@ public class DatastoreCopyTest {
 
   @Test
   public void testBuildQuery_noWhere() {
-    assertEquals("SELECT * FROM MyKind", DatastoreCopy.buildQuery("MyKind", ""));
+    assertEquals("SELECT * FROM `MyKind`", DatastoreCopy.buildQuery("MyKind", ""));
   }
 
   @Test
   public void testBuildQuery_withWhere() {
-    assertEquals("SELECT * FROM MyKind WHERE status = 'active'",
+    assertEquals("SELECT * FROM `MyKind` WHERE status = 'active'",
         DatastoreCopy.buildQuery("MyKind", "status = 'active'"));
   }
 
@@ -106,9 +106,19 @@ public class DatastoreCopyTest {
   @Before
   public void setUp() {
     emulatorHost = System.getenv("DATASTORE_EMULATOR_HOST");
-    assumeNotNull(emulatorHost);
-    sourceDs = DatastoreOptions.newBuilder().setProjectId(SOURCE_PROJECT).build().getService();
-    targetDs = DatastoreOptions.newBuilder().setProjectId(TARGET_PROJECT).build().getService();
+    if (emulatorHost == null) {
+      emulatorHost = "localhost:8089";
+    }
+    sourceDs = DatastoreOptions.newBuilder()
+        .setProjectId(SOURCE_PROJECT)
+        .setHost("http://" + emulatorHost)
+        .setCredentials(NoCredentials.getInstance())
+        .build().getService();
+    targetDs = DatastoreOptions.newBuilder()
+        .setProjectId(TARGET_PROJECT)
+        .setHost("http://" + emulatorHost)
+        .setCredentials(NoCredentials.getInstance())
+        .build().getService();
     deleteAll(sourceDs, TEST_KIND);
     deleteAll(sourceDs, OTHER_KIND);
     deleteAll(targetDs, TEST_KIND);

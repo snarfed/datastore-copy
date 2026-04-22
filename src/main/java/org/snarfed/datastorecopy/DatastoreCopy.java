@@ -244,7 +244,7 @@ public class DatastoreCopy {
   }
 
   static String buildQuery(String kind, String where) {
-    String query = "SELECT * FROM " + kind;
+    String query = "SELECT * FROM `" + kind + "`";
     if (!where.isEmpty()) {
       query += " WHERE " + where;
     }
